@@ -1,1 +1,719 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Курс C++: Безопасный ввод/вывод cstdio и файловые операции</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            900: '#1e3a8a',
+                            accent: '#06b6d4',
+                        },
+                        editor: {
+                            bg: '#0d1117',
+                            card: '#161b22',
+                            border: '#30363d',
+                            active: '#21262d'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+        .code-keyword { color: #ff7b72; font-weight: 600; }
+        .code-type { color: #79c0ff; }
+        .code-string { color: #a5d6ff; }
+        .code-number { color: #79c0ff; }
+        .code-comment { color: #8b949e; font-style: italic; }
+        .code-func { color: #d2a8ff; font-weight: 500; }
+        .code-macro { color: #ffa657; }
+    </style>
+</head>
+<body class="bg-[#090d16] text-slate-200 font-sans antialiased h-full flex flex-col md:flex-row overflow-x-hidden">
 
+    <!-- Mobile Top Navigation Bar -->
+    <header class="md:hidden bg-editor-card border-b border-editor-border p-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center space-x-2">
+            <span class="bg-blue-600 text-white font-mono px-2 py-1 rounded font-bold text-sm">C++</span>
+            <span class="font-bold text-slate-100 text-sm">C++ Master: Safe I/O</span>
+        </div>
+        <button id="mobileMenuBtn" class="text-slate-300 hover:text-white p-2 focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+        </button>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="hidden md:flex flex-col w-full md:w-80 bg-editor-card border-r border-editor-border h-auto md:h-screen sticky top-0 z-40 transition-all duration-300">
+        <div class="p-6 border-b border-editor-border hidden md:flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center font-mono font-bold text-white text-xl shadow-lg shadow-blue-500/20">
+                    C++
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-100 text-base leading-snug">C++ Академия</h1>
+                    <p class="text-xs text-slate-400">Курс: cstdio & safe I/O</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="px-6 py-4 border-b border-editor-border/60 bg-editor-bg/40">
+            <div class="flex justify-between items-center text-xs text-slate-400 mb-1.5 font-medium">
+                <span>Прогресс курса</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full w-0 transition-all duration-500"></div>
+            </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 p-4 space-y-1.5 overflow-y-auto">
+            <button onclick="switchTab('intro')" id="tab-btn-intro" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-sm font-medium transition-all duration-200 bg-blue-600/10 text-blue-400 border border-blue-500/30">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>Введение в курс</span>
+            </button>
+
+            <button onclick="switchTab('lesson1')" id="tab-btn-lesson1" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-sm font-medium transition-all duration-200 text-slate-400 hover:bg-editor-active hover:text-slate-200 border border-transparent">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span>Урок 1: printf & scanf_s</span>
+            </button>
+
+            <button onclick="switchTab('lesson2')" id="tab-btn-lesson2" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-sm font-medium transition-all duration-200 text-slate-400 hover:bg-editor-active hover:text-slate-200 border border-transparent">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                <span>Урок 2: Анализ алгоритма и файлов</span>
+            </button>
+
+            <button onclick="switchTab('practice')" id="tab-btn-practice" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-sm font-medium transition-all duration-200 text-slate-400 hover:bg-editor-active hover:text-slate-200 border border-transparent">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>Практика и Тест</span>
+            </button>
+        </nav>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-editor-border text-xs text-slate-500 text-center">
+            Основано на C11 / C++ MSVC CRT
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto min-h-screen bg-editor-bg p-4 sm:p-6 lg:p-10">
+        <div class="max-w-5xl mx-auto space-y-8">
+
+            <!-- SECTION: INTRO -->
+            <section id="content-intro" class="tab-content block space-y-6">
+                <!-- Header Card -->
+                <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-900/40 via-indigo-900/20 to-slate-900 border border-blue-500/20 p-6 sm:p-8">
+                    <div class="relative z-10 max-w-2xl space-y-4">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            Модуль 1: Безопасный ввод-вывод
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Курс по высокопроизводительному и безопасному C++</h2>
+                        <p class="text-slate-300 text-base leading-relaxed">
+                            Освойте традиционный ввод/вывод через библиотеку <code class="bg-slate-800 text-cyan-300 px-2 py-0.5 rounded font-mono text-sm">&lt;cstdio&gt;</code>, защищенные функции с суффиксом <code class="bg-slate-800 text-cyan-300 px-2 py-0.5 rounded font-mono text-sm">_s</code> (MSVC/C11 Annex K) и эффективную работу с файловыми потоками.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Features Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div class="bg-editor-card p-6 rounded-xl border border-editor-border hover:border-slate-700 transition">
+                        <div class="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        </div>
+                        <h3 class="font-bold text-lg text-white mb-2">Безопасность данных</h3>
+                        <p class="text-sm text-slate-400">Изучите, почему класический <code class="text-rose-400">scanf</code> опасен переполнением буфера и как <code class="text-emerald-400">scanf_s</code> устраняет эту уязвимость.</p>
+                    </div>
+
+                    <div class="bg-editor-card p-6 rounded-xl border border-editor-border hover:border-slate-700 transition">
+                        <div class="w-10 h-10 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <h3 class="font-bold text-lg text-white mb-2">Файловый поток</h3>
+                        <p class="text-sm text-slate-400">Освойте <code class="text-cyan-300">fopen_s</code>, <code class="text-cyan-300">fscanf_s</code> и <code class="text-cyan-300">fprintf</code> для надежной работы с текстовыми файлами на диске.</p>
+                    </div>
+
+                    <div class="bg-editor-card p-6 rounded-xl border border-editor-border hover:border-slate-700 transition">
+                        <div class="w-10 h-10 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        </div>
+                        <h3 class="font-bold text-lg text-white mb-2">Практический алгоритм</h3>
+                        <p class="text-sm text-slate-400">Подробно разберем реальную программу поиска элементов массива и вычисления математических функций.</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-4">
+                    <button onclick="switchTab('lesson1')" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-lg flex items-center space-x-2 transition shadow-lg shadow-blue-600/30">
+                        <span>Начать Урок 1</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                </div>
+            </section>
+
+            <!-- SECTION: LESSON 1 -->
+            <section id="content-lesson1" class="tab-content hidden space-y-6">
+                <div>
+                    <span class="text-xs font-semibold text-blue-400 uppercase tracking-wider">Урок 1</span>
+                    <h2 class="text-3xl font-bold text-white mt-1">Основы ввода-вывода с printf и scanf_s</h2>
+                </div>
+
+                <!-- Theoretical overview -->
+                <div class="bg-editor-card p-6 rounded-xl border border-editor-border space-y-4">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                        Зачем нужны безопасные версии (_s)?
+                    </h3>
+                    <p class="text-slate-300 leading-relaxed text-sm sm:text-base">
+                        Стандартная функция <code class="text-rose-400 font-mono">scanf("%s", buffer)</code> считывает символы до пробела без проверки размера выделенной памяти. Если ввод превысит размер массива, произойдет <strong class="text-white">переполнение буфера (Buffer Overflow)</strong> — классическая уязвимость безопасности C/C++.
+                    </p>
+                    <p class="text-slate-300 leading-relaxed text-sm sm:text-base">
+                        Функции с суффиксом <code class="text-emerald-400 font-mono">_s</code> (от англ. <em>safe</em>) требуют указания максимального размера принимаемого буфера для строк и символов.
+                    </p>
+                </div>
+
+                <!-- Specifiers Grid -->
+                <div class="bg-editor-card p-6 rounded-xl border border-editor-border space-y-4">
+                    <h3 class="text-xl font-bold text-white">Основные спецификаторы форматирования</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="bg-slate-800/60 text-slate-200 uppercase font-mono text-xs border-b border-editor-border">
+                                <tr>
+                                    <th class="p-3">Спецификатор</th>
+                                    <th class="p-3">Тип данных</th>
+                                    <th class="p-3">Пример printf</th>
+                                    <th class="p-3">Пример scanf_s</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-editor-border font-mono text-xs sm:text-sm">
+                                <tr>
+                                    <td class="p-3 text-cyan-400 font-bold">%d / %i</td>
+                                    <td class="p-3 text-slate-400">int (целое число)</td>
+                                    <td class="p-3"><code>printf("%d", cnt);</code></td>
+                                    <td class="p-3"><code>scanf_s("%d", &cnt);</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 text-cyan-400 font-bold">%lf</td>
+                                    <td class="p-3 text-slate-400">double (вещественное)</td>
+                                    <td class="p-3"><code>printf("%.2lf", mean);</code></td>
+                                    <td class="p-3"><code>scanf_s("%lf", &x);</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 text-cyan-400 font-bold">%f</td>
+                                    <td class="p-3 text-slate-400">float (одинарная точность)</td>
+                                    <td class="p-3"><code>printf("%f", val);</code></td>
+                                    <td class="p-3"><code>scanf_s("%f", &val);</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 text-cyan-400 font-bold">%8.2lf</td>
+                                    <td class="p-3 text-slate-400">double с шириной и точностью</td>
+                                    <td class="p-3"><code>printf("%8.2lf", a[i]);</code></td>
+                                    <td class="p-3 text-slate-500">—</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 text-cyan-400 font-bold">%s</td>
+                                    <td class="p-3 text-slate-400">char[] (строка)</td>
+                                    <td class="p-3"><code>printf("%s", str);</code></td>
+                                    <td class="p-3"><code class="text-emerald-400">scanf_s("%s", str, 20);</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Interactive Simulator -->
+                <div class="bg-editor-card p-6 rounded-xl border border-editor-border space-y-4">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Интерактивный симулятор вывода printf
+                    </h3>
+                    <p class="text-xs text-slate-400">Попробуйте разные спецификаторы форматирования числа <code class="text-amber-300 font-mono">12.345678</code>:</p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Спецификатор формата</label>
+                            <select id="specifierSelect" onchange="updatePrintfPreview()" class="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 font-mono text-sm text-cyan-300 focus:outline-none focus:border-blue-500">
+                                <option value="%.2lf">%.2lf (2 знака после запятой)</option>
+                                <option value="%8.2lf">%8.2lf (ширина 8, 2 знака)</option>
+                                <option value="%.4lf">%.4lf (4 знака после запятой)</option>
+                                <option value="%.0lf">%.0lf (без дробной части)</option>
+                                <option value="%e">%e (экспоненциальная форма)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Результат работы printf</label>
+                            <div class="bg-editor-bg border border-editor-border rounded-lg p-2.5 font-mono text-sm text-emerald-400 flex items-center min-h-[42px]" id="printfOutput">
+                                "12.35"
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between pt-4">
+                    <button onclick="switchTab('intro')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-6 py-2.5 rounded-lg text-sm font-medium transition">Назад</button>
+                    <button onclick="switchTab('lesson2')" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition">Перейти к Уроку 2</button>
+                </div>
+            </section>
+
+            <!-- SECTION: LESSON 2 -->
+            <section id="content-lesson2" class="tab-content hidden space-y-6">
+                <div>
+                    <span class="text-xs font-semibold text-blue-400 uppercase tracking-wider">Урок 2</span>
+                    <h2 class="text-3xl font-bold text-white mt-1">Подробный разбор C++ кода и файлового ввода-вывода</h2>
+                </div>
+
+                <!-- Code Container -->
+                <div class="bg-editor-card rounded-xl border border-editor-border overflow-hidden shadow-2xl">
+                    <!-- Code Window Header -->
+                    <div class="bg-[#161b22] px-4 py-3 border-b border-editor-border flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
+                            <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
+                            <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
+                            <span class="text-xs font-mono text-slate-400 ml-2">main.cpp</span>
+                        </div>
+                        <span class="text-xs text-slate-500 font-mono">MSVC C++ Standard</span>
+                    </div>
+
+                    <!-- Code Block -->
+                    <pre class="p-4 sm:p-6 font-mono text-xs sm:text-sm overflow-x-auto leading-relaxed bg-[#0d1117]"><code id="codeBlock"><span class="code-macro">#include &lt;cstdio&gt;</span>
+<span class="code-macro">#include &lt;cmath&gt;</span>
+<span class="code-macro">#include &lt;locale.h&gt;</span>
+
+<span class="code-keyword">const</span> <span class="code-type">int</span> max_size = <span class="code-number">20</span>;                 <span class="code-comment">// Максимальное количество элементов массива</span>
+
+<span class="code-type">int</span> <span class="code-func">main</span>(<span class="code-type">int</span> argc, <span class="code-type">char</span>* argv[])
+{
+   <span class="code-comment">// Входные данные</span>
+   <span class="code-type">double</span> a[max_size];                  <span class="code-comment">// Исходный массив A</span>
+   <span class="code-type">int</span> size;                            <span class="code-comment">// Количество элементов массива</span>
+   <span class="code-type">double</span> x;                            <span class="code-comment">// Заданное число</span>
+
+   <span class="code-comment">// Выходные данные</span>
+   <span class="code-type">bool</span> exists;                         <span class="code-comment">// Признак наличия элемента, меньшего x</span>
+   <span class="code-type">int</span> np;                              <span class="code-comment">// Индекс первого элемента, меньшего x</span>
+   <span class="code-type">double</span> mean;                         <span class="code-comment">// Среднее арифметическое ненулевых элементов</span>
+   <span class="code-type">int</span> cnt;                             <span class="code-comment">// Количество неотрицательных элементов</span>
+   <span class="code-type">int</span> imax;                            <span class="code-comment">// Индекс наибольшего из значений sqrt(e^A) - A^2</span>
+
+   <span class="code-comment">// Промежуточные данные</span>
+   <span class="code-type">double</span> sum;                          <span class="code-comment">// Сумма ненулевых элементов</span>
+   <span class="code-type">int</span> nz;                              <span class="code-comment">// Количество ненулевых элементов</span>
+   <span class="code-type">double</span> f, fmax;                      <span class="code-comment">// Текущее и наибольшее значения функции</span>
+   FILE* file;                          <span class="code-comment">// Файловая переменная</span>
+
+   <span class="code-func">setlocale</span>(LC_ALL, <span class="code-string">"rus"</span>);
+
+   <span class="code-keyword">if</span> (argc &lt; <span class="code-number">3</span>)                                       <span class="code-comment">// Проверка количества параметров</span>
+       <span class="code-func">printf</span>(<span class="code-string">"Недостаточно параметров!\n"</span>);
+   <span class="code-keyword">else if</span> (<span class="code-func">fopen_s</span>(&amp;file, argv[<span class="code-number">1</span>], <span class="code-string">"r"</span>) != <span class="code-number">0</span>)         <span class="code-comment">// Проверка открытия входного файла</span>
+       <span class="code-func">printf</span>(<span class="code-string">"Невозможно открыть файл '%s' для чтения\n"</span>, argv[<span class="code-number">1</span>]);
+   <span class="code-keyword">else</span>
+   {
+       <span class="code-comment">// Ввод исходных данных</span>
+       <span class="code-func">fscanf_s</span>(file, <span class="code-string">"%d"</span>, &amp;size);
+       <span class="code-keyword">if</span> (size &lt; <span class="code-number">1</span> || size &gt; max_size)
+       {
+           <span class="code-func">fclose</span>(file);
+           <span class="code-func">printf</span>(<span class="code-string">"Ошибка: количество элементов должно быть от 1 до %d\n"</span>, max_size);
+       }
+       <span class="code-keyword">else</span>
+       {
+           <span class="code-keyword">for</span> (<span class="code-type">int</span> i = <span class="code-number">0</span>; i &lt; size; i++)
+               <span class="code-func">fscanf_s</span>(file, <span class="code-string">"%lf"</span>, a + i);
+           <span class="code-func">fscanf_s</span>(file, <span class="code-string">"%lf"</span>, &amp;x);
+           <span class="code-func">fclose</span>(file);
+
+           <span class="code-comment">// Решение задачи</span>
+           <span class="code-comment">// Поиск первого элемента, меньшего x (досрочный выход)</span>
+           <span class="code-keyword">for</span> (np = <span class="code-number">0</span>; np &lt; size &amp;&amp; a[np] &gt;= x; np++)
+               ;
+           exists = (np &lt; size);
+
+           sum = <span class="code-number">0</span>; nz = <span class="code-number">0</span>; cnt = <span class="code-number">0</span>; mean = <span class="code-number">0</span>; imax = <span class="code-number">0</span>;
+           <span class="code-keyword">if</span> (exists)
+           {
+               <span class="code-comment">// Среднее ненулевых и число неотрицательных</span>
+               <span class="code-keyword">for</span> (<span class="code-type">int</span> i = <span class="code-number">0</span>; i &lt; size; i++)
+               {
+                   <span class="code-keyword">if</span> (a[i] != <span class="code-number">0</span>)
+                   {
+                       sum += a[i];
+                       nz++;
+                   }
+                   <span class="code-keyword">if</span> (a[i] &gt;= <span class="code-number">0</span>)
+                       cnt++;
+               }
+               <span class="code-keyword">if</span> (nz &gt; <span class="code-number">0</span>)
+                   mean = sum / nz;
+           }
+           <span class="code-keyword">else</span>
+           {
+               <span class="code-comment">// Номер наибольшего из значений sqrt(e^A) - A^2</span>
+               fmax = <span class="code-func">sqrt</span>(<span class="code-func">exp</span>(a[<span class="code-number">0</span>])) - a[<span class="code-number">0</span>] * a[<span class="code-number">0</span>];
+               <span class="code-keyword">for</span> (<span class="code-type">int</span> i = <span class="code-number">1</span>; i &lt; size; i++)
+               {
+                   f = <span class="code-func">sqrt</span>(<span class="code-func">exp</span>(a[i])) - a[i] * a[i];
+                   <span class="code-keyword">if</span> (f &gt; fmax)
+                   {
+                       fmax = f;
+                       imax = i;
+                   }
+               }
+           }
+
+           <span class="code-comment">// Вывод результатов</span>
+           <span class="code-keyword">if</span> (<span class="code-func">fopen_s</span>(&amp;file, argv[<span class="code-number">2</span>], <span class="code-string">"w"</span>) != <span class="code-number">0</span>)
+               <span class="code-func">printf</span>(<span class="code-string">"Невозможно открыть файл '%s' для записи\n"</span>, argv[<span class="code-number">2</span>]);
+           <span class="code-keyword">else</span>
+           {
+               <span class="code-func">fprintf</span>(file, <span class="code-string">"Массив A из %d элементов\n"</span>, size);
+               <span class="code-keyword">for</span> (<span class="code-type">int</span> i = <span class="code-number">0</span>; i &lt; size; i++)
+                   <span class="code-func">fprintf</span>(file, <span class="code-string">"%8.2lf "</span>, a[i]);
+               <span class="code-func">fprintf</span>(file, <span class="code-string">"\n"</span>);
+               <span class="code-func">fprintf</span>(file, <span class="code-string">"Заданное число x = %.2lf\n"</span>, x);
+               <span class="code-keyword">if</span> (exists)
+               {
+                   <span class="code-func">fprintf</span>(file, <span class="code-string">"В массиве A есть элемент, меньший x, его номер = %d\n"</span>, np + <span class="code-number">1</span>);
+                   <span class="code-keyword">if</span> (nz &gt; <span class="code-number">0</span>)
+                       <span class="code-func">fprintf</span>(file, <span class="code-string">"Среднее арифметическое ненулевых элементов = %.2lf\n"</span>, mean);
+                   <span class="code-keyword">else</span>
+                       <span class="code-func">fprintf</span>(file, <span class="code-string">"Ненулевых элементов нет, среднее не определено\n"</span>);
+                   <span class="code-func">fprintf</span>(file, <span class="code-string">"Количество неотрицательных элементов = %d\n"</span>, cnt);
+               }
+               <span class="code-keyword">else</span>
+               {
+                   <span class="code-func">fprintf</span>(file, <span class="code-string">"В массиве A нет элементов, меньших x\n"</span>);
+                   <span class="code-func">fprintf</span>(file, <span class="code-string">"Номер наибольшего из значений sqrt(e^A) - A^2 = %d\n"</span>, imax + <span class="code-number">1</span>);
+               }
+               <span class="code-func">fclose</span>(file);
+           }
+       }
+   }
+   <span class="code-keyword">return</span> <span class="code-number">0</span>;
+}</code></pre>
+                </div>
+
+                <!-- Explanation Modules -->
+                <div class="space-y-4">
+                    <h3 class="text-xl font-bold text-white">Детальный разбор логики по блокам</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Card 1 -->
+                        <div class="bg-editor-card p-5 rounded-xl border border-editor-border space-y-2">
+                            <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">Блок 1</span>
+                            <h4 class="font-bold text-white text-base">Аргументы командной строки</h4>
+                            <p class="text-xs text-slate-400 leading-relaxed">
+                                Проверка <code class="text-cyan-300 font-mono">argc &lt; 3</code> гарантирует, что программе переданы имена входного и выходного файлов.
+                                <br><code class="text-slate-300 font-mono">argv[0]</code> — путь к exe,<br>
+                                <code class="text-slate-300 font-mono">argv[1]</code> — входной файл ("in.txt"),<br>
+                                <code class="text-slate-300 font-mono">argv[2]</code> — выходной файл ("out.txt").
+                            </p>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="bg-editor-card p-5 rounded-xl border border-editor-border space-y-2">
+                            <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">Блок 2</span>
+                            <h4 class="font-bold text-white text-base">Безопасное открытие файлов fopen_s</h4>
+                            <p class="text-xs text-slate-400 leading-relaxed">
+                                В отличие от устаревшей <code class="text-rose-400 font-mono">fopen</code>, безопасная версия <code class="text-emerald-400 font-mono">fopen_s(&amp;file, path, mode)</code> принимает указатель на указатель и возвращает код ошибки (<code class="text-white">0</code> при успехе).
+                            </p>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="bg-editor-card p-5 rounded-xl border border-editor-border space-y-2">
+                            <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Блок 3</span>
+                            <h4 class="font-bold text-white text-base">Чтение fscanf_s и валидация</h4>
+                            <p class="text-xs text-slate-400 leading-relaxed">
+                                Код сначала считывает количество элементов <code class="text-cyan-300 font-mono">size</code> и проверяет его: <code class="text-amber-300 font-mono">size &gt; max_size (20)</code>. Это исключает выход за границы физического массива <code class="text-slate-200 font-mono">double a[20]</code>.
+                            </p>
+                        </div>
+
+                        <!-- Card 4 -->
+                        <div class="bg-editor-card p-5 rounded-xl border border-editor-border space-y-2">
+                            <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Блок 4</span>
+                            <h4 class="font-bold text-white text-base">Ветвление алгоритма (exists)</h4>
+                            <p class="text-xs text-slate-400 leading-relaxed">
+                                <strong>Ветка A (exists=true):</strong> Находится среднее ненулевых <code class="text-cyan-300 font-mono">mean = sum/nz</code> и количество неотрицательных <code class="text-cyan-300 font-mono">cnt</code>.
+                                <br>
+                                <strong>Ветка B (exists=false):</strong> Находится индекс элемента с максимальным результатом формулы <code class="text-emerald-300 font-mono">f = sqrt(exp(a[i])) - a[i]*a[i]</code>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between pt-4">
+                    <button onclick="switchTab('lesson1')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-6 py-2.5 rounded-lg text-sm font-medium transition">Назад</button>
+                    <button onclick="switchTab('practice')" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition">Перейти к Тесту</button>
+                </div>
+            </section>
+
+            <!-- SECTION: PRACTICE & QUIZ -->
+            <section id="content-practice" class="tab-content hidden space-y-6">
+                <div>
+                    <span class="text-xs font-semibold text-blue-400 uppercase tracking-wider">Практический блок</span>
+                    <h2 class="text-3xl font-bold text-white mt-1">Проверка знаний по материалам курса</h2>
+                </div>
+
+                <!-- Quiz Form Container -->
+                <div id="quizContainer" class="space-y-6">
+
+                    <!-- QUESTION 1 -->
+                    <div class="bg-editor-card p-6 rounded-xl border border-editor-border space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold font-mono px-2.5 py-1 rounded bg-slate-800 text-slate-300">Вопрос 1 из 3</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Какое значение возвращает функция <code class="text-cyan-300 font-mono">fopen_s</code> в случае успешного открытия файла?</h3>
+                        
+                        <div class="space-y-2 font-mono text-sm">
+                            <label class="quiz-option flex items-center p-3 rounded-lg border border-editor-border bg-editor-bg cursor-pointer hover:border-slate-600 transition">
+                                <input type="radio" name="q1" value="0" class="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 focus:ring-blue-500">
+                                <span class="ml-3 text-slate-300">0 (ноль)</span>
+                            </label>
+                            <label class="quiz-option flex items-center p-3 rounded-lg border border-editor-border bg-editor-bg cursor-pointer hover:border-slate-600 transition">
+                                <input type="radio" name="q1" value="1" class="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 focus:ring-blue-500">
+                                <span class="ml-3 text-slate-300">Указатель FILE*</span>
+                            </label>
+                            <label class="quiz-option flex items-center p-3 rounded-lg border border-editor-border bg-editor-bg cursor-pointer hover:border-slate-600 transition">
+                                <input type="radio" name="q1" value="2" class="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 focus:ring-blue-500">
+                                <span class="ml-3 text-slate-300">-1 (EOF)</span>
+                            </label>
+                        </div>
+                        <div id="q1-feedback" class="hidden text-xs p-3 rounded-lg"></div>
+                    </div>
+
+                    <!-- QUESTION 2 -->
+                    <div class="bg-editor-card p-6 rounded-xl border border-editor-border space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold font-mono px-2.5 py-1 rounded bg-slate-800 text-slate-300">Вопрос 2 из 3</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">В каком формате выводится порядковый номер элемента (<code class="text-cyan-300 font-mono">np</code> или <code class="text-cyan-300 font-mono">imax</code>) в итоговый файл?</h3>
+                        
+                        <div class="space-y-2 font-mono text-sm">
+                            <label class="quiz-option flex items-center p-3 rounded-lg border border-editor-border bg-editor-bg cursor-pointer hover:border-slate-600 transition">
+                                <input type="radio" name="q2" value="0" class="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 focus:ring-blue-500">
+                                <span class="ml-3 text-slate-300">Как 0-based индекс (np)</span>
+                            </label>
+                            <label class="quiz-option flex items-center p-3 rounded-lg border border-editor-border bg-editor-bg cursor-pointer hover:border-slate-600 transition">
+                                <input type="radio" name="q2" value="1" class="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 focus:ring-blue-500">
+                                <span class="ml-3 text-slate-300">Как 1-based порядковый номер (np + 1 / imax + 1)</span>
+                            </label>
+                            <label class="quiz-option flex items-center p-3 rounded-lg border border-editor-border bg-editor-bg cursor-pointer hover:border-slate-600 transition">
+                                <input type="radio" name="q2" value="2" class="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 focus:ring-blue-500">
+                                <span class="ml-3 text-slate-300">В виде указателя на память</span>
+                            </label>
+                        </div>
+                        <div id="q2-feedback" class="hidden text-xs p-3 rounded-lg"></div>
+                    </div>
+
+                    <!-- QUESTION 3 -->
+                    <div class="bg-editor-card p-6 rounded-xl border border-editor-border space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold font-mono px-2.5 py-1 rounded bg-slate-800 text-slate-300">Вопрос 3 из 3</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">При каком условии в приведенном коде вычисляется номер наибольшего значения функции <code class="text-cyan-300 font-mono">sqrt(exp(a[i])) - a[i]*a[i]</code>?</h3>
+                        
+                        <div class="space-y-2 font-mono text-sm">
+                            <label class="quiz-option flex items-center p-3 rounded-lg border border-editor-border bg-editor-bg cursor-pointer hover:border-slate-600 transition">
+                                <input type="radio" name="q3" value="0" class="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 focus:ring-blue-500">
+                                <span class="ml-3 text-slate-300">Если в массиве найден элемент меньше x (exists == true)</span>
+                            </label>
+                            <label class="quiz-option flex items-center p-3 rounded-lg border border-editor-border bg-editor-bg cursor-pointer hover:border-slate-600 transition">
+                                <input type="radio" name="q3" value="1" class="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 focus:ring-blue-500">
+                                <span class="ml-3 text-slate-300">Если в массиве НЕТ элементов меньше x (exists == false)</span>
+                            </label>
+                            <label class="quiz-option flex items-center p-3 rounded-lg border border-editor-border bg-editor-bg cursor-pointer hover:border-slate-600 transition">
+                                <input type="radio" name="q3" value="2" class="w-4 h-4 text-blue-600 bg-slate-800 border-slate-700 focus:ring-blue-500">
+                                <span class="ml-3 text-slate-300">Всегда в конце программы независимо от ввода</span>
+                            </label>
+                        </div>
+                        <div id="q3-feedback" class="hidden text-xs p-3 rounded-lg"></div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center justify-between pt-2">
+                        <button onclick="checkQuiz()" class="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-emerald-600/20 transition">
+                            Проверить ответы
+                        </button>
+                        <button onclick="resetQuiz()" class="text-slate-400 hover:text-white text-sm font-medium">
+                            Сбросить
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quiz Results Banner -->
+                <div id="quizResult" class="hidden bg-editor-card border border-editor-border p-6 rounded-xl text-center space-y-4">
+                    <div id="resultIcon" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl"></div>
+                    <h3 id="resultTitle" class="text-2xl font-bold text-white"></h3>
+                    <p id="resultText" class="text-slate-300 text-sm max-w-md mx-auto"></p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Interactive JavaScript -->
+    <script>
+        // State management
+        const tabOrder = ['intro', 'lesson1', 'lesson2', 'practice'];
+        
+        function switchTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            
+            // Deactivate all sidebar buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600/10', 'text-blue-400', 'border-blue-500/30');
+                btn.classList.add('text-slate-400', 'border-transparent');
+            });
+
+            // Show selected content
+            const targetContent = document.getElementById(`content-${tabId}`);
+            if (targetContent) targetContent.classList.remove('hidden');
+
+            // Highlight active navigation button
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-blue-600/10', 'text-blue-400', 'border-blue-500/30');
+                activeBtn.classList.remove('text-slate-400', 'border-transparent');
+            }
+
+            // Update progress bar
+            const index = tabOrder.indexOf(tabId);
+            const percent = Math.round(((index + 1) / tabOrder.length) * 100);
+            document.getElementById('progressBar').style.width = `${percent}%`;
+            document.getElementById('progressPercent').textContent = `${percent}%`;
+
+            // Close mobile menu if open
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar.classList.contains('hidden') && window.innerWidth < 768) {
+                sidebar.classList.add('hidden');
+            }
+        }
+
+        // Live Printf Simulator
+        function updatePrintfPreview() {
+            const specifier = document.getElementById('specifierSelect').value;
+            const outputEl = document.getElementById('printfOutput');
+            const num = 12.345678;
+
+            let formatted = '';
+            switch (specifier) {
+                case '%.2lf':
+                    formatted = num.toFixed(2);
+                    break;
+                case '%8.2lf':
+                    formatted = num.toFixed(2).padStart(8, ' ');
+                    break;
+                case '%.4lf':
+                    formatted = num.toFixed(4);
+                    break;
+                case '%.0lf':
+                    formatted = Math.round(num).toString();
+                    break;
+                case '%e':
+                    formatted = num.toExponential(6);
+                    break;
+            }
+            outputEl.textContent = `"${formatted}"`;
+        }
+
+        // Quiz Logic
+        const answers = {
+            q1: { correct: '0', explain: 'fopen_s возвращает 0 при успешном открытии и код ошибки errno_t (не ноль) при неудаче.' },
+            q2: { correct: '1', explain: 'В коде к нулевым индексам массивов прибавляется 1 (np + 1, imax + 1) для понятного человеку вывода.' },
+            q3: { correct: '1', explain: 'Блок else выполняется только когда (exists == false), то есть когда в массиве нет элементов строго меньше x.' }
+        };
+
+        function checkQuiz() {
+            let score = 0;
+            const total = 3;
+
+            for (let i = 1; i <= total; i++) {
+                const qName = `q${i}`;
+                const selected = document.querySelector(`input[name="${qName}"]:checked`);
+                const feedbackEl = document.getElementById(`${qName}-feedback`);
+                
+                feedbackEl.classList.remove('hidden', 'bg-rose-500/10', 'text-rose-400', 'border-rose-500/20', 'bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/20');
+                feedbackEl.classList.add('border');
+
+                if (selected && selected.value === answers[qName].correct) {
+                    score++;
+                    feedbackEl.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/20');
+                    feedbackEl.innerHTML = `<strong>Верно!</strong> ${answers[qName].explain}`;
+                } else {
+                    feedbackEl.classList.add('bg-rose-500/10', 'text-rose-400', 'border-rose-500/20');
+                    feedbackEl.innerHTML = `<strong>Неверно.</strong> ${answers[qName].explain}`;
+                }
+            }
+
+            // Show summary banner
+            const resultDiv = document.getElementById('quizResult');
+            const icon = document.getElementById('resultIcon');
+            const title = document.getElementById('resultTitle');
+            const text = document.getElementById('resultText');
+
+            resultDiv.classList.remove('hidden');
+
+            if (score === total) {
+                icon.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                icon.textContent = '🎉';
+                title.textContent = 'Отличный результат!';
+                text.textContent = `Вы успешно ответили на все ${score} из ${total} вопросов. Матрица C++ и безопасный ввод/вывод освоены!`;
+            } else {
+                icon.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl bg-amber-500/20 text-amber-400 border border-amber-500/30';
+                icon.textContent = '📚';
+                title.textContent = `Результат: ${score} из ${total}`;
+                text.textContent = 'Изучите пояснения к ошибкам выше и попробуйте пройти тест еще раз!';
+            }
+
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetQuiz() {
+            document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+            for (let i = 1; i <= 3; i++) {
+                const fb = document.getElementById(`q${i}-feedback`);
+                fb.classList.add('hidden');
+            }
+            document.getElementById('quizResult').classList.add('hidden');
+        }
+
+        // Mobile Menu Toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>
